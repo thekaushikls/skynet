@@ -1,3 +1,4 @@
+name: skynet
 services:
   develop:
     build:
@@ -5,10 +6,7 @@ services:
       dockerfile: Dockerfile
       args:
         DISPLAY_BANNER: ${DISPLAY_BANNER:-false}
-        INSTALL_CLAUDE: ${INSTALL_CLAUDE:-false}
-        INSTALL_CODEX: ${INSTALL_CODEX:-false}
-        INSTALL_GEMINI: ${INSTALL_GEMINI:-false}
-        INSTALL_OPENCODE: ${INSTALL_OPENCODE:-false}
+        SKYNET_PASSWORD: ${SKYNET_PASSWORD:-}
     container_name: skynet
     hostname: skynet
     working_dir: ${WORKSPACE_TARGET}
@@ -20,10 +18,8 @@ services:
       - COLORTERM=truecolor
 
     volumes:
-      - ./sessions/opencode:/root/.local/share/opencode
-      - ./sessions/claude/.claude:/root/.claude
-      - ./sessions/claude/.claude.json:/root/.claude.json
-
+      # Mount helper scripts (e.g. run: sudo bash /scripts/fix-perms.sh <path>)
+      - ./scripts:/scripts:ro
       - ${WORKSPACE_SOURCE}:${WORKSPACE_TARGET}
 
     restart: "unless-stopped"

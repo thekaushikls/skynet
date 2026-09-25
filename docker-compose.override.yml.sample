@@ -1,0 +1,29 @@
+# Personal/local volume mounts.
+#
+# Copy this file to docker-compose.override.yml (gitignored) and adjust as
+# needed. docker-compose.yml builds and runs fine without it, but you'll
+# lose the .ssh mount and the toolchain-* volumes that persist manually
+# installed tools across `down`/`up`.
+
+services:
+  develop:
+    environment:
+      - PATH=/usr/local/share/npm-global/bin:/home/skynet/.local/bin:/home/skynet/.cargo/bin:/home/skynet/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - NVM_DIR=/home/skynet/.nvm
+    volumes:
+      - ./extensions/marketplace:/marketplace
+      - ./extensions/.ssh:/home/skynet/.ssh
+
+      # Persist manually-installed toolchain across down/up
+      - toolchain-local:/home/skynet/.local
+      - toolchain-cargo:/home/skynet/.cargo
+      - toolchain-rustup:/home/skynet/.rustup
+      - toolchain-bun:/home/skynet/.bun
+      - toolchain-nvm:/home/skynet/.nvm
+
+volumes:
+  toolchain-local:
+  toolchain-cargo:
+  toolchain-rustup:
+  toolchain-bun:
+  toolchain-nvm:
