@@ -6,9 +6,9 @@ services:
       dockerfile: Dockerfile
       args:
         DISPLAY_BANNER: ${DISPLAY_BANNER:-false}
-        SKYNET_PASSWORD: ${SKYNET_PASSWORD:-}
+        ROOT_PASSWORD: ${ROOT_PASSWORD:-}
     container_name: skynet
-    hostname: skynet
+    hostname: sandbox
     working_dir: ${WORKSPACE_TARGET}
     stdin_open: true
     tty: true

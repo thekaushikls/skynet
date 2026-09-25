@@ -8,18 +8,18 @@
 services:
   develop:
     environment:
-      - PATH=/usr/local/share/npm-global/bin:/home/skynet/.local/bin:/home/skynet/.cargo/bin:/home/skynet/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-      - NVM_DIR=/home/skynet/.nvm
+      - PATH=/usr/local/share/npm-global/bin:/home/agent/.local/bin:/home/agent/.cargo/bin:/home/agent/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - NVM_DIR=/home/agent/.nvm
     volumes:
       - ./extensions/marketplace:/marketplace
-      - ./extensions/.ssh:/home/skynet/.ssh
+      - ./extensions/.ssh:/home/agent/.ssh
 
       # Persist manually-installed toolchain across down/up
-      - toolchain-local:/home/skynet/.local
-      - toolchain-cargo:/home/skynet/.cargo
-      - toolchain-rustup:/home/skynet/.rustup
-      - toolchain-bun:/home/skynet/.bun
-      - toolchain-nvm:/home/skynet/.nvm
+      - toolchain-local:/home/agent/.local
+      - toolchain-cargo:/home/agent/.cargo
+      - toolchain-rustup:/home/agent/.rustup
+      - toolchain-bun:/home/agent/.bun
+      - toolchain-nvm:/home/agent/.nvm
 
 volumes:
   toolchain-local:

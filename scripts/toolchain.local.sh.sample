@@ -1,0 +1,58 @@
+#!/bin/bash
+# Personal toolchain - copy this to toolchain.local.sh (gitignored) and
+# uncomment/edit whatever you want. Plain bash, run manually, whenever you
+# want, as many times as you want:
+#
+#   docker exec skynet bash /scripts/toolchain.local.sh
+#
+# There's no framework here - no schema, no runner, nothing enforcing
+# idempotency. Each block below is commented out and guarded with a
+# `command -v` check as a convention worth keeping, not a rule.
+#
+# Everything here installs into $HOME as the `agent` user - no sudo, no
+# root needed. It persists across `docker compose down`/`up` via the
+# toolchain-* named volumes in docker-compose.override.yml.
+#
+# For system packages (apt) instead, see the Dockerfile directly - that
+# needs a rebuild either way, so there's no separate mechanism for it here.
+#
+# Examples below are real commands, not placeholders - pulled from an
+# inventory of what was actually installed in this project's container
+# over time (rust/python/ruby/node tooling for Grasshopper/SketchUp plugin
+# dev). Uncomment what applies to you, delete the rest, add your own.
+
+set -euo pipefail
+
+# --- uv (Python package/version manager) ---
+# command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
+# uv python install 3.11 3.12 3.13
+# uv tool install ruff
+
+# --- Rust ---
+# command -v rustup >/dev/null || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# rustup target add wasm32-unknown-unknown
+# cargo install wasm-pack
+
+# --- Bun ---
+# command -v bun >/dev/null || curl -fsSL https://bun.sh/install | bash
+
+# --- nvm ---
+# test -s "$NVM_DIR/nvm.sh" || curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+# --- npm globals beyond what's baked into the image ---
+# npm install -g pnpm corepack
+
+# --- Ruby gems (requires the `ruby-full` apt package - add it in the Dockerfile) ---
+# gem install rubocop rubocop-sketchup ruby-lsp sorbet-runtime yard
+
+# --- GitHub CLI, jq, htop, build tools, etc. ---
+# These are apt packages - add them to the Dockerfile's `apt install` line
+# instead, since they need root and a rebuild regardless.
+
+# --- AWS CLI v2 (standalone installer, not apt - installs into $HOME) ---
+# if ! command -v aws >/dev/null; then
+#   curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
+#   unzip -q -o /tmp/awscliv2.zip -d /tmp
+#   /tmp/aws/install --install-dir "$HOME/.local/aws-cli" --bin-dir "$HOME/.local/bin"
+#   rm -rf /tmp/awscliv2.zip /tmp/aws
+# fi

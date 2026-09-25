@@ -1,17 +1,17 @@
 #!/bin/bash
-# Recursively chown a path (or paths) to skynet:skynet.
+# Recursively chown a path (or paths) to agent:agent.
 #
 # Must run as root. Two equivalent ways to invoke it:
 #
-#   # from an interactive shell inside the container (asks for skynet's password)
+#   # from an interactive shell inside the container (asks for agent's password)
 #   sudo bash /scripts/fix-perms.sh /workspace/SomeRepo
 #
 #   # from the Windows host, no password needed
 #   docker exec -u 0 skynet bash /scripts/fix-perms.sh /workspace/SomeRepo
 #
 # Only needed for files/directories that were created while the container
-# ran as root, before the switch to a non-root `skynet` user. New files
-# created by `skynet` are already owned correctly and don't need this.
+# ran as root, before the switch to a non-root `agent` user. New files
+# created by `agent` are already owned correctly and don't need this.
 set -euo pipefail
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -26,9 +26,9 @@ fi
 
 for target in "$@"; do
     case "$target" in
-    /workspace | /workspace/* | /home/skynet | /home/skynet/*) ;;
+    /workspace | /workspace/* | /home/agent | /home/agent/*) ;;
     *)
-        echo "Refusing to chown '$target': only paths under /workspace or /home/skynet are allowed." >&2
+        echo "Refusing to chown '$target': only paths under /workspace or /home/agent are allowed." >&2
         exit 1
         ;;
     esac
@@ -38,8 +38,8 @@ for target in "$@"; do
         continue
     fi
 
-    echo "==> chown -R skynet:skynet $target"
-    chown -R skynet:skynet "$target"
+    echo "==> chown -R agent:agent $target"
+    chown -R agent:agent "$target"
 done
 
 echo "Done."

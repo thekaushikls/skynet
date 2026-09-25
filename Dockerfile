@@ -1,7 +1,7 @@
 FROM node:24-bookworm-slim
 
 ARG DISPLAY_BANNER=true
-ARG SKYNET_PASSWORD
+ARG ROOT_PASSWORD
 
 RUN apt update && apt upgrade -y
 
@@ -9,40 +9,40 @@ RUN apt update && apt upgrade -y
 # via `sudo apt install [PACKAGE-NAME]`
 RUN apt install -y sudo curl git nano ca-certificates
 
-# Rename the stock `node` user (uid/gid 1000) to `skynet` rather than adding
+# Rename the stock `node` user (uid/gid 1000) to `agent` rather than adding
 # a second user, so it inherits a working home and there's no uid collision.
-RUN groupmod -n skynet node \
-    && usermod -l skynet -d /home/skynet -m -s /bin/bash node \
-    && usermod -aG sudo skynet
+RUN groupmod -n agent node \
+    && usermod -l agent -d /home/agent -m -s /bin/bash node \
+    && usermod -aG sudo agent
 
-# Password-gated sudo: `skynet` can become root, but only a human
+# Password-gated sudo: `agent` can become root, but only a human
 # typing the password at a real terminal can do it. Claude Code's Bash tool
 # runs non-interactively with no TTY, so `sudo` fails cleanly there instead
 # of prompting - the agent cannot escalate on its own. The password is a
 # build-time-only ARG: it lands in `/etc/shadow`, never in a runtime env var,
 # so nothing running inside the container can read it back out.
-# Leaving SKYNET_PASSWORD unset locks the account (no password-based sudo at
+# Leaving ROOT_PASSWORD unset locks the account (no password-based sudo at
 # all); `docker exec -u 0` from the host is always available regardless.
-RUN if [ -n "$SKYNET_PASSWORD" ]; then \
-    echo "skynet:${SKYNET_PASSWORD}" | chpasswd; \
+RUN if [ -n "$ROOT_PASSWORD" ]; then \
+    echo "agent:${ROOT_PASSWORD}" | chpasswd; \
     else \
-    passwd -l skynet; \
+    passwd -l agent; \
     fi
 
-# npm global prefix owned by `skynet`, so global installs (and Claude Code's
+# npm global prefix owned by `agent`, so global installs (and Claude Code's
 # own auto-update) work without root.
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
-ENV PATH=/usr/local/share/npm-global/bin:/home/skynet/.local/bin:$PATH
-RUN mkdir -p $NPM_CONFIG_PREFIX && chown -R skynet:skynet /usr/local/share
+ENV PATH=/usr/local/share/npm-global/bin:/home/agent/.local/bin:$PATH
+RUN mkdir -p $NPM_CONFIG_PREFIX && chown -R agent:agent /usr/local/share
 
 # Pre-create and chown home + future volume mount points before switching
 # USER - a fresh named volume inherits ownership from whatever already
 # exists at its mount path in the image, so this is what stops bind/volume
 # mounts coming back root-owned.
-RUN mkdir -p /home/skynet/.local /home/skynet/.claude /home/skynet/.ssh \
-    && chown -R skynet:skynet /home/skynet
+RUN mkdir -p /home/agent/.local /home/agent/.claude /home/agent/.ssh \
+    && chown -R agent:agent /home/agent
 
-USER skynet
+USER agent
 
 # Update npm
 RUN npm install -g npm@latest
@@ -52,7 +52,7 @@ RUN npm install -g npm@latest
 # is designed. See README.md.
 
 # Setup terminal banner if requested
-COPY --chown=skynet:skynet scripts/add_banner.sh /tmp/add_banner.sh
+COPY --chown=agent:agent scripts/add_banner.sh /tmp/add_banner.sh
 RUN if [ "$DISPLAY_BANNER" = "true" ]; then \
     chmod +x /tmp/add_banner.sh && \
     /tmp/add_banner.sh && \
