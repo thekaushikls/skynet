@@ -7,6 +7,7 @@ services:
       args:
         DISPLAY_BANNER: ${DISPLAY_BANNER:-false}
         ROOT_PASSWORD: ${ROOT_PASSWORD:-}
+    image: skynet:latest
     container_name: skynet
     hostname: sandbox
     working_dir: ${WORKSPACE_TARGET}

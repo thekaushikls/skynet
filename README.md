@@ -6,47 +6,42 @@
 
 ## The `agent` user
 
-Three separate identifiers, on purpose: `docker ps` shows the container as
-`skynet`; the shell's own hostname is `sandbox`; the Linux user everything
-runs as is `agent`.
+Three separate identifiers: `docker ps` shows `skynet`, the hostname is
+`sandbox`, the Linux user is `agent`.
 
-The container runs as a non-root user, `agent` (uid 1000) — not `root`.
-This is what lets Claude Code's `--dangerously-skip-permissions` work at all;
-it refuses to run as root.
+The container runs as `agent` (uid 1000), not root — required for Claude
+Code's `--dangerously-skip-permissions` to work at all.
 
-`agent` has `sudo`, but it's gated by a password:
+`agent` has `sudo`, gated by a password:
 
-- Set `ROOT_PASSWORD` in `.env` and rebuild to enable it. A human typing at
-  a real terminal (`docker exec -it`, `skynet.bat`, or an attached VS Code
-  terminal) can then `sudo` normally.
-- An AI agent running inside the container (e.g. Claude Code's Bash tool)
-  has no TTY, so `sudo` fails cleanly there instead of prompting — the agent
-  cannot escalate to root on its own.
-- Leave `ROOT_PASSWORD` blank and the account is locked — no password-based
-  sudo at all. `docker exec -u 0 skynet <cmd>` from the host always works
-  regardless, as a Docker-level privilege independent of the password.
-- Build args (including `ROOT_PASSWORD`) are visible via
-  `docker history --no-trunc` on the built image — fine for a local sandbox,
-  don't reuse this as a real secret elsewhere.
+- Set `ROOT_PASSWORD` in `.env` and rebuild. A human at a real terminal
+  (`docker exec -it`, `skynet.bat`, an attached VS Code terminal) can then
+  `sudo` normally.
+- An AI agent's Bash tool has no TTY, so `sudo` fails cleanly there instead
+  of prompting — it can't escalate on its own.
+- Blank `ROOT_PASSWORD` locks the account entirely. `docker exec -u 0 skynet
+  <cmd>` from the host always works regardless.
+- Build args are visible via `docker history --no-trunc` — fine for a local
+  sandbox, not a real secret store.
 
-Only `git`, `curl` and `nano` are baked into the image. Everything else is
-yours to add:
+`git`, `curl`, `nano`, `ca-certificates`, `htop`, `build-essential` are
+baked in. Add more in one of two places:
 
-- **System packages** (`apt`) need root and a rebuild either way — add them
-  directly to the Dockerfile's `apt install` line, per fork.
-- **User-scope tools** (`uv`, `rust`, `bun`, `aws`, `ruff`, npm globals, gems,
-  ...) — copy [scripts/toolchain.local.sh.sample](scripts/toolchain.local.sh.sample)
-  to `scripts/toolchain.local.sh` (gitignored), uncomment/edit what you want,
-  and run it whenever you like:
+- **System packages** (apt, root, rebuild) — edit the Dockerfile's
+  `apt install` line, or `sudo apt install <pkg>` for a one-off (won't
+  survive a rebuild).
+- **User-scope tools that don't need root** — `uv`, `rust`, `gh`, `bun`,
+  `aws`, npm globals, gems, ... — copy
+  [scripts/toolchain.local.sh.sample](scripts/toolchain.local.sh.sample)
+  to `scripts/toolchain.local.sh` (gitignored), edit, run:
 
   ```bash
   docker exec skynet bash /scripts/toolchain.local.sh
   ```
 
-  Plain bash, no framework — the sample is seeded with real commands, not
-  placeholders. It installs into `$HOME`, which persists across
-  `docker compose down`/`up` via the `toolchain-*` volumes in
-  `docker-compose.override.yml`.
+  Persists across rebuilds via the `toolchain-*` volumes in
+  `docker-compose.override.yml`. Prefer this over the Dockerfile when a tool
+  supports it (e.g. `gh`) — no rebuild, no sudo password needed.
 
 ### Fixing permissions on pre-existing files
 
@@ -65,12 +60,9 @@ docker exec -u 0 skynet bash /scripts/fix-perms.sh <path>
 
 ## Bind Mounts
 
-The container uses bind mounts to sync your local workspace with the container filesystem:
-
-- **Host Path**: Defined by `WORKSPACE_SOURCE` in `.env` (e.g., `X:/skynet/workspace`)
-- **Container Path**: Defined by `WORKSPACE_TARGET` in `.env` (default: `/workspace`)
-
-All files in your source directory are accessible inside the container at the target path, allowing seamless development with persistent data.
+`WORKSPACE_SOURCE` (host) is bind-mounted to `WORKSPACE_TARGET` (container,
+default `/workspace`), both set in `.env`. Changes on either side show up
+on the other immediately.
 
 ## ENV sample
 
@@ -128,12 +120,8 @@ docker-compose down
 
 ### VS Code
 
-With the container running (`docker-compose up -d`), use the **Dev
-Containers: Attach to Running Container** command and pick `skynet`. Since
-the image itself runs as `agent` (not root), VS Code Server, every
-integrated terminal, and the Claude Code extension all attach as `agent`
-automatically — no extra devcontainer config needed for
-`--dangerously-skip-permissions` to work inside the extension.
-
-Attach never manages the container's lifecycle, so `docker-compose down`
-is still what stops it.
+With the container running, use **Dev Containers: Attach to Running
+Container** and pick `skynet`. Since the image runs as `agent`, VS Code
+Server, terminals, and the Claude Code extension all attach as `agent`
+automatically — no extra config needed. Attach doesn't manage the
+container's lifecycle; `docker-compose down` still stops it.

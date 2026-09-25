@@ -1,29 +1,14 @@
 #!/bin/bash
-# Personal toolchain - copy this to toolchain.local.sh (gitignored) and
-# uncomment/edit whatever you want. Plain bash, run manually, whenever you
-# want, as many times as you want:
-#
+# Personal toolchain (gitignored). Uncomment/edit what you want, run manually:
 #   docker exec skynet bash /scripts/toolchain.local.sh
 #
-# There's no framework here - no schema, no runner, nothing enforcing
-# idempotency. Each block below is commented out and guarded with a
-# `command -v` check as a convention worth keeping, not a rule.
-#
-# Everything here installs into $HOME as the `agent` user - no sudo, no
-# root needed. It persists across `docker compose down`/`up` via the
-# toolchain-* named volumes in docker-compose.override.yml.
-#
-# For system packages (apt) instead, see the Dockerfile directly - that
-# needs a rebuild either way, so there's no separate mechanism for it here.
-#
-# Examples below are real commands, not placeholders - pulled from an
-# inventory of what was actually installed in this project's container
-# over time (rust/python/ruby/node tooling for Grasshopper/SketchUp plugin
-# dev). Uncomment what applies to you, delete the rest, add your own.
+# Installs into $HOME as `agent` (no root needed); persists via the
+# toolchain-* volumes in docker-compose.override.yml. System packages (apt)
+# go in the Dockerfile instead.
 
 set -euo pipefail
 
-# --- uv (Python package/version manager) ---
+# --- uv ---
 # command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 # uv python install 3.11 3.12 3.13
 # uv tool install ruff
@@ -39,17 +24,25 @@ set -euo pipefail
 # --- nvm ---
 # test -s "$NVM_DIR/nvm.sh" || curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 
-# --- npm globals beyond what's baked into the image ---
+# --- npm globals ---
+# claude-code needs --allow-scripts or `claude` installs broken (npm 11+
+# blocks its postinstall, which fetches the real platform binary).
+# command -v claude >/dev/null || npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code
 # npm install -g pnpm corepack
 
-# --- Ruby gems (requires the `ruby-full` apt package - add it in the Dockerfile) ---
+# --- Ruby gems (needs `ruby-full` via apt first) ---
 # gem install rubocop rubocop-sketchup ruby-lsp sorbet-runtime yard
 
-# --- GitHub CLI, jq, htop, build tools, etc. ---
-# These are apt packages - add them to the Dockerfile's `apt install` line
-# instead, since they need root and a rebuild regardless.
+# --- gh (binary release, no apt/root needed) ---
+# if ! command -v gh >/dev/null; then
+#   GH_TARBALL_URL=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+#     | grep -oP '"browser_download_url":\s*"\K[^"]*linux_amd64\.tar\.gz(?=")')
+#   curl -fsSL "$GH_TARBALL_URL" -o /tmp/gh.tar.gz
+#   mkdir -p "$HOME/.local/gh" && tar -xzf /tmp/gh.tar.gz -C "$HOME/.local/gh" --strip-components=1
+#   ln -sf "$HOME/.local/gh/bin/gh" "$HOME/.local/bin/gh" && rm /tmp/gh.tar.gz
+# fi
 
-# --- AWS CLI v2 (standalone installer, not apt - installs into $HOME) ---
+# --- AWS CLI v2 (standalone installer, not apt) ---
 # if ! command -v aws >/dev/null; then
 #   curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
 #   unzip -q -o /tmp/awscliv2.zip -d /tmp

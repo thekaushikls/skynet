@@ -14,12 +14,13 @@ services:
       - ./extensions/marketplace:/marketplace
       - ./extensions/.ssh:/home/agent/.ssh
 
-      # Persist manually-installed toolchain across down/up
+      # Persist manually-installed toolchain across down/up/rebuild
       - toolchain-local:/home/agent/.local
       - toolchain-cargo:/home/agent/.cargo
       - toolchain-rustup:/home/agent/.rustup
       - toolchain-bun:/home/agent/.bun
       - toolchain-nvm:/home/agent/.nvm
+      - toolchain-npm-global:/usr/local/share/npm-global
 
 volumes:
   toolchain-local:
@@ -27,3 +28,4 @@ volumes:
   toolchain-rustup:
   toolchain-bun:
   toolchain-nvm:
+  toolchain-npm-global:
