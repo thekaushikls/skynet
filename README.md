@@ -71,6 +71,7 @@ Create a `.env` file from `.env.sample`:
 ```env
 DISPLAY_BANNER=true
 ROOT_PASSWORD=
+SHM_SIZE=64mb
 
 WORKSPACE_SOURCE=./workspace
 WORKSPACE_TARGET=/workspace
@@ -78,6 +79,7 @@ WORKSPACE_TARGET=/workspace
 
 - `DISPLAY_BANNER`: Purely cosmetic display of ASCII banner on `clear`
 - `ROOT_PASSWORD`: Password for `sudo` as the `agent` user (see above). Blank = locked.
+- `SHM_SIZE`: Container `/dev/shm` size. Docker's 64mb default is too small for some workloads (headless Chrome/Playwright, multiprocessing) — bump it as needed, e.g. `2gb`.
 - `WORKSPACE_SOURCE`: Local directory to mount
 - `WORKSPACE_TARGET`: Mount point inside container
 

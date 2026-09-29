@@ -13,6 +13,7 @@ services:
     working_dir: ${WORKSPACE_TARGET}
     stdin_open: true
     tty: true
+    shm_size: ${SHM_SIZE:-64mb}
 
     environment:
       - TERM=xterm-256color
