@@ -6,7 +6,7 @@ ARG ROOT_PASSWORD
 RUN apt update && apt upgrade -y
 
 # Baseline packages - see README.md for how to add more.
-RUN apt install -y sudo curl git nano ca-certificates htop build-essential
+RUN apt install -y sudo curl git nano ca-certificates htop build-essential unzip jq
 
 # Rename the stock `node` user (uid/gid 1000) to `agent` - inherits a
 # working home, no uid collision.
